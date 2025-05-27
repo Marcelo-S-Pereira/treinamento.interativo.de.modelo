@@ -29,7 +29,11 @@ O **AI Brain Factory** é um projeto de IA generativa que utiliza o **DialoGPT**
 ### **Pré-requisitos**  
 - Python 3.8+  
 - Biblioteca `transformers` (Hugging Face)  
-- GPU (recomendado) ou CPU  
+- GPU (recomendado)
+- CPU mínimo I5 ou FX6300
+- RAM 16gb (ideal)
+- Não funciona em computador com RAM menor que 10gb
+
 
 ### **Instalação**  
 ```bash
@@ -38,12 +42,6 @@ cd DialoEscola
 pip install -r requirements.txt
 ```  
 
-### **Execução**  
-```bash
-Leia o arquivo verificar.txt"
-```  
-
----
 
 ## ** Estrutura do Projeto**  
 ```
@@ -58,8 +56,10 @@ DialoEscola/
 ## ** Métricas de Avaliação**  
 O projeto utiliza:  
 - **BLEU Score** (avaliação de qualidade textual)  
-- **BERTScore** (similaridade semântica)  
-- **Feedback de Professores** (dados reais de escolas parceiras)
+- **BERTScore** (similaridade semântica)
+- **METEOR**
+- **ROUGE-L**
+- **Feedback de Professores ou Alunos** (Nota definitiva para decidir se o modelo precisa de treinamento)
 
  **Funcionamento das Métricas de Avaliação do DialoEscola** 
 
@@ -121,7 +121,7 @@ O projeto utiliza:
 **Resultado:** O modelo é ajustado para incluir *"Água ajuda plantas a crescerem, sacia a sede e mantém rios limpos"*.  
 ---
 
-Termos no treinamento:
+Termos técnicos no treinamento:
 
 Epoch: Quantas vezes o modelo viu todo o conjunto de dados de treino. Como reler um livro 3 vezes para entender melhor.
 Loss: Representa o valor da função de perda, e está em 3.24, é alto no início mas o importante é o quanto chegou no último epoch, ou seja, indica quão "erradas" estão as previsões do modelo em relação aos rótulos reais ou às saídas do modelo professor (no caso da destilação), então se caiu para 1.64, e isto é bom.
@@ -147,17 +147,17 @@ O DialoEscola (DialoGPT_HITL_RL_v1) combina **rigor técnico** (BLEU), **intelig
 
 ---
 
-## ** Sugestão de Uso Real**  
-1. **Escolas Públicas** – Auxílio em aulas de Machine Learn interativo e imersivo, menos técnico, e de maior compreensão, não seria necessário conhecimentos avançados para treinar o modelo.
-2. **Alunos com TDAH** – depois de treinado por professores e alunos o modelo pode promover Diálogos curtos para outros alunos manter o foco 
-3. **Preparação para ENEM** – qualquer aluno pode digitar as perguntas e respostas e treinar o modelo para depois poder estudar com dialogos de forma mais eficiente.
-4. Ensino Superior
+## ** Sugestão de Uso Real é a Didática e Experimentação**  
+1. **Escolas Públicas** – Auxílio em aulas de Machine Learn interativo e imersivo, para introdução, e de maior compreensão, não seria necessário conhecimentos avançados para
+2. **Escolas Técnicas** – Auxílio em aulas de Machine Learn interativo e imersivo, para introdução, e de maior compreensão, não seria necessário conhecimentos avançados para
+3. **Universidade** - Auxílio em aulas de Machine Learn interativo e imersivo, para introdução nos primeiros períodos, e de maior compreensão, não seria necessário conhecimentos avançados para treinar o modelo.
 
 ---
 
 ## ** Como Contribuir**  
 1. **Reporte bugs** (GitHub Issues)  
-2. **Melhore o modelo** – Faça fine-tuning com novos dados, ou ajude no código  
+2. **Melhore o modelo** – Faça fine-tuning com novos dados, ou ajude no código a dimiuir overffiting.
+3. **Desenvolver entradas em formulário Web** - Desenvolver a interface gráfica web.
 
 
 ## ** Licença**  

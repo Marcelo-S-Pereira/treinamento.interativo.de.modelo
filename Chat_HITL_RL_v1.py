@@ -1,20 +1,32 @@
+# CÉLULA 1: Importações e Configurações (MODIFICADO)
+# ==============================================================================
+
 import json
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
+from torch.utils.data import Dataset
 from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu
+from rouge_score import rouge_scorer
 from bert_score import score
 import argparse
-import nltk
-import re
-import time
+import nltk, re, time
+import keyboard 
 
-# Baixar recursos do NLTK
+# ==============================================================================
+
+# CÉLULA 2: Baixar recursos do NLTK
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 
-# Configuração de hiperparâmetros
+# ==============================================================================
+
+
+# CÉLULA 3: Configuração de hiperparâmetros
+# ==============================================================================
+
 parser = argparse.ArgumentParser()
+parser.add_argument("--learning_rate", type=float, default=1e-5, help="Taxa de aprendizado.") #new
+parser.add_argument("--num_train_epochs", type=int, default=5, help="Número de épocas.") #new
 parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--learning_rate", type=float, default=5e-5)
 parser.add_argument("--num_train_epochs", type=int, default=3)
@@ -31,18 +43,113 @@ parser.add_argument("--eos_token_id", type=int, default=50256)
 
 args = parser.parse_args()
 
+# ==============================================================================
+
+
 # Caminhos para salvar e carregar os modelos
+# ==============================================================================
+
+#instrução: 
+# 1 - Depois de baixar o modelo, crie uma pasta com nome de modelo_path
+#         obs: a pasta modelo_path terá um modelo para leitura
+# 2 - crie uma pasta com nome de salvar_path e coloque uma copia do modelo treinado
+#         obs: a pasta salvar_path com o modelo baixado vai receber novos treinamentos
+# 3 - após o treinamento copie o modelo treinado para a pasta modelo_path
+#         obs: poderá observar as novas respostas e acumular treinamento desta maneira.
+
 modelo_path = r"C:\Users\cla_m\OneDrive\Área de Trabalho\conversação\modelos_AI\SALA_DE_AULA\DIALO_GPT_READ"
 salvar_path = r"C:\Users\cla_m\OneDrive\Área de Trabalho\conversação\modelos_AI\SALA_DE_AULA\DIALO_GPT_WRITE"
 
+# ==============================================================================
+
 
 # Carregar modelo e tokenizer
+# ==============================================================================
+
 tokenizer = AutoTokenizer.from_pretrained(modelo_path)
 model = AutoModelForCausalLM.from_pretrained(modelo_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
+model.train()
+
+# ==============================================================================
+
+# Função para separar as palavras da pontuação
+# ==============================================================================
+
+# A função irá separar os pontos das palavras
+# Gerar uma lista única com as palavras e pontos na ordem correta.
+
+def separar_pontos_e_palavras(frase):
+    palavras = frase.split()
+    lista_final = []
+    for palavra in palavras:
+        # Separa a palavra dos pontos (se houver)
+        if '.' in palavra:
+            partes = palavra.split('.')
+            lista_final.append(partes[0])  # Adiciona a palavra
+            lista_final.append('.')        # Adiciona o ponto
+        else:
+            lista_final.append(palavra)    # Adiciona a palavra sem pontos
+    return lista_final
+
+# ==============================================================================
+
+# Métodos de avaliação
+# ==============================================================================
+# Função que compara a frase gerada com a frase esperada e gera a tabela de comparação.
+
+def comparar_frases(frase_esperada, frase_gerada, recompensa_maxima, penalizacao_maxima, meia_recompensa):
+    # Separar pontos e palavras
+    lista_esperada = separar_pontos_e_palavras(frase_esperada)
+    lista_gerada = separar_pontos_e_palavras(frase_gerada)
+    
+    # Determinar o tamanho máximo das listas
+    tamanho_maximo = max(len(lista_esperada), len(lista_gerada))
+    
+    # Preencher listas com valores vazios, se necessário
+    lista_esperada += [''] * (tamanho_maximo - len(lista_esperada))
+    lista_gerada += [''] * (tamanho_maximo - len(lista_gerada))
+    
+    # Inicializar variáveis
+    pontuacao_total = 0
+    detalhes = []
+    
+    for i in range(tamanho_maximo):
+        palavra_esperada = lista_esperada[i]
+        palavra_gerada = lista_gerada[i]
+        
+        if palavra_esperada == palavra_gerada:
+            status = "posição correta"
+            recompensa = recompensa_maxima
+        elif palavra_gerada == '':
+            status = "ausente"
+            recompensa = penalizacao_maxima
+        elif palavra_gerada in lista_esperada:
+            status = "posição incorreta"
+            distancia = abs(i - lista_esperada.index(palavra_gerada))
+            recompensa = meia_recompensa * (1 - (distancia / len(lista_esperada)))
+        else:
+            status = "ausente"
+            recompensa = penalizacao_maxima
+        
+        # Adicionar detalhes à tabela
+        detalhes.append({
+            "esperada": palavra_esperada,
+            "gerada": palavra_gerada,
+            "status": status,
+            "recompensa": recompensa
+        })
+        pontuacao_total += recompensa
+    
+    return pontuacao_total, detalhes
+
+# ==============================================================================
+
 
 # Função para gerar resposta contextualizada
+# ==============================================================================
+
 def gerar_resposta(contexto, max_length=50, temperature=0.7, top_k=50, top_p=0.9):
     input_ids = tokenizer.encode(contexto + tokenizer.eos_token, return_tensors="pt").to(device)
     resposta_ids = model.generate(

@@ -1,4 +1,4 @@
-Dado técnicos
+Glossário de código
 
 ---
 
